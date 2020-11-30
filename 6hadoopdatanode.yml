@@ -1,0 +1,49 @@
+- name: Configuring datanode
+  hosts: 192.168.183.134
+  vars_prompt:
+  - name: data_dir
+    prompt: "Enter datanode directory name -->  "
+    private: no
+  tasks:
+  - name: Installing JDK
+    yum:
+     name: jdk-8u171-linux-x64.rpm
+     state: present
+     disable_gpg_check: yes
+
+  - name: Installing Hadoop
+    command: rpm -i hadoop-1.2.1-1.x86_64.rpm --force
+     
+  - name: Creating a directory
+    file:
+     path: "{{ data_dir }}"
+     state: directory
+ 
+  - name: Configuring hdfs-site.xml 
+    blockinfile:
+     path: /etc/hadoop/hdfs-site.xml
+     insertafter: "<configuration>"
+     block: |
+       <property>
+       <name>dfs.data.dir</name>
+       <value>{{ data_dir }}</value>
+       </property>
+
+  - name: Configuring core-site.xml 
+    blockinfile:
+     path: /etc/hadoop/core-site.xml
+     insertafter: "<configuration>"
+     block: |
+       <property>
+       <name>fs.default.name</name>
+       <value>hdfs://192.168.183.133:9001</value>
+       </property>
+
+  - name: Starting Data Node
+    shell: "hadoop-daemon.sh start datanode"
+
+
+
+
+
+

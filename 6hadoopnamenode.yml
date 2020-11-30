@@ -1,0 +1,54 @@
+- name: Configuring namenode
+  hosts: 192.168.183.133
+  vars_prompt:
+  - name: name_dir
+    prompt: "Enter namenode directory name -->  "
+    private: no
+  tasks:
+  - name: Disabling Firewall
+    shell: "service firewalld stop"
+
+  - name: Set setenforce to 0
+    shell: "setenforce 0"
+  
+  - name: Installing JDK
+    yum:
+     name: jdk-8u171-linux-x64.rpm
+     state: present
+     disable_gpg_check: yes
+
+  - name: Installing Hadoop
+    command: rpm -i hadoop-1.2.1-1.x86_64.rpm --force
+     
+  - name: Creating a directory
+    file:
+     path: "{{ name_dir }}"
+     state: directory
+ 
+  - name: Configuring hdfs-site.xml 
+    blockinfile:
+     path: /etc/hadoop/hdfs-site.xml
+     insertafter: "<configuration>"
+     block: |
+       <property>
+       <name>dfs.name.dir</name>
+       <value>{{ name_dir }}</value>
+       </property>
+
+  - name: Configuring core-site.xml 
+    blockinfile:
+     path: /etc/hadoop/core-site.xml
+     insertafter: "<configuration>"
+     block: |
+       <property>
+       <name>fs.default.name</name>
+       <value>hdfs://0.0.0.0:9001</value>
+       </property>
+
+  - name: Formatting namenode
+    shell: "echo Y | hadoop namenode -format"
+
+  - name: Starting Name Node
+    command: "hadoop-daemon.sh start namenode"
+
+
